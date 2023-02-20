@@ -1,0 +1,133 @@
+/*Macro para la media y varianza conocida*/
+
+%MACRO Media(alpha,dataset,media, columna, var);
+
+proc means data=&dataset n mean;
+var &columna;
+output out=data_m;
+run;
+
+proc transpose data=WORK.DATA_M out=work.Transpose;
+	var &columna;
+run;
+
+
+data hyp ;
+keep Z Valor_inferior_una_cola Valor_superior_una_cola Valor_inferior_dos_colas
+Valor_superior_dos_colas L1 L2 L3;
+set work.transpose;
+Z=(col4-&media)/(&var**0.5/col1);
+Valor_inferior_una_cola=quantile("Normal",&alpha,0,1);
+Valor_superior_una_cola=quantile("Normal",1-&alpha,0,1);
+valor_superior_dos_colas=quantile("Normal",1-&alpha/2,0,1);
+valor_inferior_dos_colas=quantile("Normal",&alpha/2,0,1);
+If (Z LT Valor_inferior_una_cola) then
+L1="Rechazar H0";
+Else
+L1="No Rechazar H0";
+
+
+If (Z gT Valor_superior_una_cola) then
+L2="Rechazar H0";
+Else
+L2="No Rechazar H0";
+
+
+If (Z GT Valor_superior_dos_colas or Z LT Valor_inferior_dos_colas) then
+L3="Rechazar H0";
+Else
+L3="No Rechazar H0";
+run;
+
+proc print data=hyp;
+var Z Valor_inferior_una_cola Valor_superior_una_cola Valor_inferior_dos_colas
+Valor_superior_dos_colas;
+run;
+
+proc print data=hyp NOOBS LABEL;
+var L1 L2 L3;
+label L1="Prueba de cola inferior";
+label L2="Prueba de cola superior";
+label L3="Prueba de dos colas";
+run;
+
+proc delete data=WORK.DATA_M work.Transpose hyp;
+run;
+
+%MEND Media;
+
+/*En una empacadora de carne se cree que la media de cada corte es de 18.5 kg
+y la desviación estándar es de 1.4. Hacer la prueba de hipótesis con respecto a la media
+para este problema con alpha=0.05. 
+*/
+%Media(0.05,work.import,18.5,kg, 1.4**2);
+
+/*Macro para la media y varianza desconocida*/
+
+%MACRO MediaV(alpha,dataset,media, columna);
+
+proc means data=&dataset n mean;
+var &columna;
+output out=data_m;
+run;
+
+proc transpose data=WORK.DATA_M out=work.Transpose;
+	var &columna;
+run;
+
+
+data hyp ;
+keep Z Valor_inferior_una_cola Valor_superior_una_cola Valor_inferior_dos_colas
+Valor_superior_dos_colas L1 L2 L3;
+set work.transpose;
+Z=(col4-&media)/(col5/col1);
+Valor_inferior_una_cola=quantile("T",&alpha,col1-1);
+Valor_superior_una_cola=quantile("T",1-&alpha,col1-1);
+valor_superior_dos_colas=quantile("T",1-&alpha/2,col1-1);
+valor_inferior_dos_colas=quantile("T",&alpha/2,col1-1);
+If (Z LT Valor_inferior_una_cola) then
+L1="Rechazar H0";
+Else
+L1="No Rechazar H0";
+
+
+If (Z gT Valor_superior_una_cola) then
+L2="Rechazar H0";
+Else
+L2="No Rechazar H0";
+
+
+If (Z GT Valor_superior_dos_colas or Z LT Valor_inferior_dos_colas) then
+L3="Rechazar H0";
+Else
+L3="No Rechazar H0";
+run;
+
+proc print data=hyp;
+var Z Valor_inferior_una_cola Valor_superior_una_cola Valor_inferior_dos_colas
+Valor_superior_dos_colas;
+run;
+
+proc print data=hyp NOOBS LABEL;
+var L1 L2 L3;
+label L1="Prueba de cola inferior";
+label L2="Prueba de cola superior";
+label L3="Prueba de dos colas";
+run;
+
+proc delete data=WORK.DATA_M work.Transpose hyp;
+run;
+
+%MEND MediaV;
+/*En una fábrica de listones la maquina ha tenido fallos y creen que se 
+debe cambiar si la media de los listones es menor a 10 cm. Realizar la prueba de hipótesis
+sabiendo que la varianza es desconocida y alpha=0.05*/
+%MediaV();
+
+/*En una fábrica de refrescos una máquina ha llenado botellas durante 5 años
+y se cambiará cuando la varianza de la cantidad de mililitros sea mayor a 1. 
+Con la información obtenida haga una prueba de hipótesis con alpha=0.1*/
+
+/*En un cultivo de plantas estan probando un insecticida para evitar que las plantas
+sean devoradas por gusanos. Si el insecticida tuvo éxito en el 90% de los casos o más,
+entonces se lanzará al mercado. Hacer una prueba de hipótesis con alpha=0.7*/
