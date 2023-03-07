@@ -1,0 +1,174 @@
+/* ----------------------------------------- */
+/* Sesion 03 */
+
+
+data work.import;
+set sashelp.baseball;
+run;
+
+/* ----------------------------------------- */
+/* Para generar numeros aleatorios*/
+data work1;
+do i = 1 to 1000;
+U=rand("Uniform", 0 ,1 ); /* Dist uniforme 0,1 */
+output;
+end;
+run;
+
+
+data work1 (drop=i); /*Para ocultar la i de la visualizacion de datos*/
+do i = 1 to 1000;
+U=rand("Uniform", 0 ,1 ); 
+output;
+end;
+run;
+
+data work1;
+keep U; /* Para que solo se muestre la variable U (sin la i) */
+do i = 1 to 1000;
+U=rand("Uniform", 0 ,1 ); 
+output;
+end;
+run;
+
+/* ----------------------------------------- */
+/* Para generar una ma de una normal */
+data work1 (drop=i);
+do i = 1 to 1000;
+U=rand("Uniform", 0 ,1 ); 
+Z=rand("Normal",0,1);
+output;
+end;
+run;
+
+data work1 (drop=i Z); /* Para quitar la variable i y Z al mismo tiempo*/
+do i = 1 to 1000;
+U=rand("Uniform", 0 ,1 );
+Z=rand("Normal",0,1);
+output;
+end;
+run;
+
+
+data work1 (drop=i); 
+do i = 1 to 1000;
+U=rand("Uniform", 0 ,1 );
+'z 3'n=rand("Normal",0,1); /* Sintaxis para renombrar una variable y añadir espacios*/
+output;
+end;
+run;
+
+/* Agregamos mas distribuciones*/
+data work1 (drop=i); 
+do i = 1 to 10;
+U=rand("Uniform", 0 ,1 );
+H=rand("Poisson",5);
+L=rand("Exponential",2);
+output;
+end;
+run;
+
+
+data work1;
+keep N;
+do i=1 to 100;
+U=rand("Uniform",0,1);
+N=quantile("Normal",U,0,1);
+output;
+end;
+run;
+
+/* ----------------------------------------- */
+/* Cumulative Distribution Function (cdf)*/
+data work1;
+keep N;
+do i=1 to 100;
+U=rand("Uniform",0,1);
+N=cdf("Normal",U,0,1);
+output;
+end;
+run;
+
+proc means data=work1 maxdec=3 min max;
+var N;
+run;
+
+/* ----------------------------------------- */
+/* Codigo usado para graficar la dist normal*/
+data work1;
+keep N;
+do i=1 to 100000;
+U=rand("Uniform",0,1);
+N=quantile("Normal",U,0,1);
+output;
+end;
+run;
+
+/* ----------------------------------------- */
+/* Codigo usado para graficar la dist poisson*/
+data work1;
+keep N;
+do i=1 to 100000;
+N=rand("Poisson",5);
+output;
+end;
+run;
+
+proc means data=work1 maxdec=3 mean
+var N;
+run;
+
+/* ----------------------------------------- */
+proc summary data=sashelp.fish;
+output out= summary;
+run;
+
+proc print  data=summary;
+
+
+proc means data=sashelp.fish;
+run;
+
+
+/* Ruta: Tareas y utilidades > Estadisticas */
+/* ----------------------------------------- */
+
+/* Estadisticas de sumarizacion*/
+ods noproctitle;
+ods graphics / imagemap=on;
+
+proc means data=WORK.WORK1 chartype mean std min max n vardef=df;
+	var N;
+run;
+
+/* ///////////////////////////////////////// */
+/* Test t */
+data work1;
+keep U Z; 
+do i = 1 to 1000;
+U=rand("Uniform", 0 ,1 );
+Z=rand("Normal",0,1); 
+output;
+end;
+run;
+
+
+data work1;
+keep  Y Z P ; 
+do i = 1 to 1000;
+U=rand("Uniform", 0 ,1 );
+Z=rand("Normal",0,1); 
+Y=rand("Normal",0.5,3); 
+If (U LT 0.5) THEN /*less or equal (LT)*/
+DO;
+	P=1;
+	
+	END;
+	ELSE
+	DO;
+	P=0;
+	
+	END;
+output;
+end;
+run;
