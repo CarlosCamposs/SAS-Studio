@@ -1,0 +1,109 @@
+ods noproctitle;
+ods graphics / imagemap=on;
+
+proc reg data=WORK.IMPORT alpha=0.05 plots(only maxpoints=none)=(diagnostics(stats=(default aic sbc)) 
+		residuals observedbypredicted);
+	model price=bedrooms bathrooms sqft_living sqft_lot /;
+	test sqft_lot=0 ;
+	run;
+quit;
+
+
+/*Con variable de peso grade*/
+
+ods noproctitle;
+ods graphics / imagemap=on;
+
+proc reg data=WORK.IMPORT alpha=0.05 plots(only maxpoints=none)=(diagnostics(stats=(default aic sbc))
+		residuals observedbypredicted);
+	model price=bedrooms sqft_living sqft_lot waterfront /;
+	weight grade;
+	run;
+quit;
+
+/*Sin variable de peso grade*/
+
+ods noproctitle;
+ods graphics / imagemap=on;
+
+proc reg data=WORK.IMPORT alpha=0.05 plots(only maxpoints=none)=(diagnostics(stats=(default aic sbc))
+		residuals observedbypredicted);
+	model price=bedrooms sqft_living sqft_lot waterfront /;
+	run;
+quit;
+
+/*Residuos*/
+
+ods noproctitle;
+ods graphics / imagemap=on;
+
+proc reg data=WORK.IMPORT alpha=0.05 plots(only 
+		maxpoints=none)=(observedbypredicted);
+	model price=bedrooms sqft_living sqft_lot waterfront /;
+	output out=work.Residuos r=residuos;
+	run;
+quit;
+
+/*test normalidad sin variable de peso*/
+proc univariate data=work.residuos normaltest;
+var residuos;
+run;
+
+/*Residuos con peso*/
+
+ods noproctitle;
+ods graphics / imagemap=on;
+
+proc reg data=WORK.IMPORT alpha=0.1 plots(only 
+		maxpoints=none)=(observedbypredicted);
+	model price=bedrooms sqft_living sqft_lot waterfront /;
+	weight grade;
+	output out=work.Residuos1 r=residuos;
+	run;
+quit;
+
+
+/*test normalidad con variable de peso*/
+proc univariate data=work.residuos1 normaltest;
+var residuos;
+run;
+
+/*floors como variable de agrupación*/
+
+ods noproctitle;
+ods graphics / imagemap=on;
+
+proc sort data=WORK.IMPORT out=Work.TempDataSorted;
+	by floors;
+run;
+
+proc reg data=Work.TempDataSorted alpha=0.05 plots(only 
+		maxpoints=none)=(observedbypredicted);
+	model price=bedrooms sqft_living sqft_lot /;
+	output out=work.Residuos r=r_;
+	by floors;
+	run;
+quit;
+
+proc delete data=Work.TempDataSorted;
+run;
+
+/*Test de normalidad*/
+
+proc univariate data=work.residuos normaltest;
+var r_;
+run;
+
+data work.import;
+set work.import;
+bed_sqrt=sqrt(bedrooms);
+ln_price=log(price);
+run;
+
+ods noproctitle;
+ods graphics / imagemap=on;
+
+proc logistic data=WORK.TITANIC plots
+    (maxpoints=800)=all;
+	model Survived(event='1')=Pclass Age / link=probit technique=fisher;
+run;
